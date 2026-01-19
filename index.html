@@ -7,16 +7,20 @@
   <style>
     body {
       margin: 0;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       background: #f5f5f5;
       font-family: sans-serif;
     }
 
+    /* ===== Card ===== */
     .card {
       position: relative;
-      width: 300px;
+      width: 100%;
+      max-width: 380px; /* ขนาดเหมาะกับมือถือ */
       transition: filter 0.4s ease;
     }
 
@@ -30,19 +34,28 @@
       display: block;
     }
 
+    /* ===== Text fields ===== */
     .field {
       position: absolute;
       color: #222;
-      font-size: 16px;
       font-weight: bold;
-      left: 120px;
+      left: 40%;
+      font-size: 4vw; /* scale ตามจอ */
     }
 
-    .name { top: 58px; }
-    .join { top: 88px; }
-    .expire { top: 120px; }
+    .name   { top: 18%; }
+    .join   { top: 27%; }
+    .expire { top: 36%; }
 
-    /* loading overlay */
+    /* ล็อกขนาดบนจอใหญ่ */
+    @media (min-width: 420px) {
+      .field {
+        font-size: 16px;
+        left: 120px;
+      }
+    }
+
+    /* ===== Loading overlay ===== */
     .loading {
       position: absolute;
       inset: 0;
@@ -61,7 +74,7 @@
       pointer-events: none;
     }
 
-    /* text animation */
+    /* ===== Fade animation ===== */
     .fade {
       opacity: 0;
       transform: translateY(6px);
@@ -80,14 +93,15 @@
   <div class="card loading-state">
     <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
 
-    <img src="card.png">
+    <img src="card.png" alt="Member Card">
     <div id="name" class="field name fade"></div>
     <div id="join" class="field join fade"></div>
     <div id="expire" class="field expire fade"></div>
   </div>
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+    const csvUrl =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
 
     const params = new URLSearchParams(window.location.search);
     const memberId = params.get("id");
@@ -99,13 +113,13 @@
         .then(res => res.text())
         .then(text => {
           const rows = text.trim().split("\n").map(r => r.split(","));
-          const headers = rows[0];
+          const headers = rows[0].map(h => h.toLowerCase());
           const data = rows.slice(1);
 
-          const idIndex = headers.findIndex(h => h.toLowerCase().includes("id"));
-          const nameIndex = headers.findIndex(h => h.toLowerCase().includes("name"));
-          const joinIndex = headers.findIndex(h => h.toLowerCase().includes("join"));
-          const expireIndex = headers.findIndex(h => h.toLowerCase().includes("expire"));
+          const idIndex     = headers.findIndex(h => h.includes("id"));
+          const nameIndex   = headers.findIndex(h => h.includes("name"));
+          const joinIndex   = headers.findIndex(h => h.includes("join"));
+          const expireIndex = headers.findIndex(h => h.includes("expire"));
 
           const member = data.find(r => r[idIndex] === memberId);
 
@@ -114,8 +128,8 @@
             return;
           }
 
-          document.getElementById("name").innerText = member[nameIndex];
-          document.getElementById("join").innerText = "สมัคร: " + member[joinIndex];
+          document.getElementById("name").innerText   = member[nameIndex];
+          document.getElementById("join").innerText   = "สมัคร: " + member[joinIndex];
           document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];
 
           const loadingEl = document.getElementById("loading");
@@ -125,7 +139,7 @@
           cardEl.classList.remove("loading-state");
 
           document.querySelectorAll(".fade").forEach((el, i) => {
-            setTimeout(() => el.classList.add("show"), 100 + i * 120);
+            setTimeout(() => el.classList.add("show"), 120 + i * 120);
           });
         });
     }
