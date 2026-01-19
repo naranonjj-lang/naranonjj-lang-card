@@ -1,144 +1,161 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Member Card</title>
+<meta charset="UTF-8">
+<title>Member Card</title>
 
-  <style>
-    /* ===== Page ===== */
-    body {
-      margin: 0;
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #f5f5f5;
-      font-family: sans-serif;
-    }
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f2f2f2;
+    font-family: sans-serif;
+  }
 
-    /* ===== Card ===== */
-    .card {
-      position: relative;
-      width: 100%;
-      max-width: 380px;        /* พอดีจอมือถือ */
-      transition: filter 0.4s ease;
-    }
+  .card-wrap {
+    text-align: center;
+  }
 
-    .card img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
+  #loading {
+    margin-bottom: 12px;
+    opacity: 0.7;
+    transition: opacity .4s ease;
+  }
 
-    /* blur ตอนโหลด */
-    .card.loading-state img {
-      filter: blur(3px) brightness(0.9);
-    }
+  .card {
+    position: relative;
+    width: 360px;
+    max-width: 90vw;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 14px 32px rgba(0,0,0,.15);
+    filter: blur(8px);
+    opacity: .6;
+    transition: all .5s ease;
+  }
 
-    /* ===== Text (ล็อกตำแหน่ง) ===== */
-    .field {
-      position: absolute;
-      left: 120px;     /* 🔒 ปรับครั้งเดียวจากดีไซน์ */
-      font-size: 16px; /* 🔒 ไม่ responsive */
-      font-weight: bold;
-      color: #222;
-    }
+  .card.loaded {
+    filter: blur(0);
+    opacity: 1;
+  }
 
-    .name   { top: 58px; }
-    .join   { top: 88px; }
-    .expire { top: 120px; }
+  .card img {
+    width: 100%;
+    display: block;
+  }
 
-    /* ===== Loading overlay ===== */
-    .loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.85);
-      font-size: 14px;
-      z-index: 5;
-      opacity: 1;
-      transition: opacity 0.4s ease;
-    }
+  .field {
+    position: absolute;
+    left: 140px;
+    color: #222;
+    font-size: 16px;
+    font-weight: bold;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all .4s ease;
+  }
 
-    .loading.hide {
-      opacity: 0;
-      pointer-events: none;
-    }
+  .field.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-    /* ===== Fade animation ===== */
-    .fade {
-      opacity: 0;
-      transform: translateY(6px);
-      transition: all 0.4s ease;
-    }
+  .name { top: 73.5px; }
+  .join { top: 108px; }
+  .expire { top: 145px; }
 
-    .fade.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  </style>
+  .status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 20px;
+    color: #fff;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+
+  .status.active { background: #22c55e; }
+  .status.expired { background: #ef4444; }
+  .status.show { opacity: 1; }
+</style>
 </head>
 
 <body>
 
-  <div class="card loading-state">
-    <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
+<div class="card-wrap">
+  <div id="loading">กำลังโหลดข้อมูล...</div>
 
-    <img src="card.png" alt="Member Card">
-
-    <div id="name" class="field name fade"></div>
-    <div id="join" class="field join fade"></div>
-    <div id="expire" class="field expire fade"></div>
+  <div class="card" id="card">
+    <img src="card.png">
+    <div id="status" class="status"></div>
+    <div id="name" class="field name"></div>
+    <div id="join" class="field join"></div>
+    <div id="expire" class="field expire"></div>
   </div>
+</div>
 
-  <script>
-    const csvUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+const params = new URLSearchParams(window.location.search);
+const memberId = params.get("id");
 
-    const params = new URLSearchParams(window.location.search);
-    const memberId = params.get("id");
+if (!memberId) {
+  document.body.innerHTML = "<h2>ไม่พบรหัสสมาชิก</h2>";
+} else {
+  fetch(csvUrl)
+    .then(r => r.text())
+    .then(text => {
+      const rows = text.trim().split("\n").map(r => r.split(","));
+      const headers = rows[0].map(h => h.toLowerCase());
+      const data = rows.slice(1);
 
-    if (!memberId) {
-      document.body.innerHTML = "<h2>ไม่พบรหัสสมาชิก</h2>";
-    } else {
-      fetch(csvUrl)
-        .then(res => res.text())
-        .then(text => {
-          const rows = text.trim().split("\n").map(r => r.split(","));
-          const headers = rows[0].map(h => h.toLowerCase());
-          const data = rows.slice(1);
+      const idIndex = headers.indexOf("id");
+      const nameIndex = headers.indexOf("name");
+      const joinIndex = headers.indexOf("join");
+      const expireIndex = headers.indexOf("expire");
 
-          const idIndex     = headers.findIndex(h => h.includes("id"));
-          const nameIndex   = headers.findIndex(h => h.includes("name"));
-          const joinIndex   = headers.findIndex(h => h.includes("join"));
-          const expireIndex = headers.findIndex(h => h.includes("expire"));
+      const member = data.find(r => r[idIndex] === memberId);
+      if (!member) {
+        document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
+        return;
+      }
 
-          const member = data.find(r => r[idIndex] === memberId);
+      const nameEl = document.getElementById("name");
+      const joinEl = document.getElementById("join");
+      const expireEl = document.getElementById("expire");
+      const card = document.getElementById("card");
+      const status = document.getElementById("status");
 
-          if (!member) {
-            document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
-            return;
-          }
+      nameEl.innerText = member[nameIndex];
+      joinEl.innerText = "สมัคร: " + member[joinIndex];
+      expireEl.innerText = "หมดอายุ: " + member[expireIndex];
 
-          document.getElementById("name").innerText   = member[nameIndex];
-          document.getElementById("join").innerText   = "สมัคร: " + member[joinIndex];
-          document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];
+      const today = new Date();
+      const expireDate = new Date(member[expireIndex]);
 
-          const loadingEl = document.getElementById("loading");
-          const cardEl = document.querySelector(".card");
+      if (expireDate >= today) {
+        status.innerText = "ACTIVE";
+        status.className = "status active show";
+      } else {
+        status.innerText = "EXPIRED";
+        status.className = "status expired show";
+      }
 
-          loadingEl.classList.add("hide");
-          cardEl.classList.remove("loading-state");
+      document.getElementById("loading").style.opacity = 0;
 
-          document.querySelectorAll(".fade").forEach((el, i) => {
-            setTimeout(() => el.classList.add("show"), 120 + i * 120);
-          });
-        });
-    }
-  </script>
+      setTimeout(() => {
+        card.classList.add("loaded");
+        document.querySelectorAll(".field").forEach(el => el.classList.add("show"));
+      }, 300);
+    });
+}
+</script>
 
 </body>
 </html>
