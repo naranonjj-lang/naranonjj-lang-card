@@ -58,10 +58,10 @@
         const headers = rows[0];
         const data = rows.slice(1);
 
-        const idIndex = headers.indexOf("id");
-        const nameIndex = headers.indexOf("name");
-        const joinIndex = headers.indexOf("join_date");
-        const expireIndex = headers.indexOf("expire_date");
+        const idIndex = headers.findIndex(h => h.toLowerCase().includes("id"));
+const nameIndex = headers.findIndex(h => h.toLowerCase().includes("name"));
+const joinIndex = headers.findIndex(h => h.toLowerCase().includes("join"));
+const expireIndex = headers.findIndex(h => h.toLowerCase().includes("expire"));
 
         const member = data.find(r => r[idIndex] === memberId);
 
