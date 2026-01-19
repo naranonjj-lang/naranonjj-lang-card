@@ -63,7 +63,7 @@
     transform: translateY(0);
   }
 
-  /* ปรับตำแหน่งตรงนี้เท่านั้น */
+  /* 🔧 ปรับตำแหน่งข้อความตรงนี้ */
   .name   { top: 73.5px; }
   .join   { top: 108px; }
   .expire { top: 145px; }
@@ -102,7 +102,24 @@
 </div>
 
 <script>
+/* ===============================
+   CONFIG
+================================ */
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+
+/* ===============================
+   HELPERS
+================================ */
+function parseDateSafe(value) {
+  if (!value) return null;
+  const clean = value.replace(/"/g, "").trim();
+  const d = new Date(clean + "T00:00:00");
+  return isNaN(d) ? null : d;
+}
+
+/* ===============================
+   MAIN
+================================ */
 const params = new URLSearchParams(window.location.search);
 const memberId = params.get("id");
 
@@ -113,21 +130,23 @@ if (!memberId) {
     .then(r => r.text())
     .then(text => {
 
-      // ✅ แก้ CSV \r และช่องว่างทุกช่อง
       const rows = text
         .trim()
         .split("\n")
         .map(r => r.split(",").map(c => c.trim()));
 
-      const headers = rows[0].map(h => h.toLowerCase().trim());
+      const headers = rows[0].map(h => h.toLowerCase());
       const data = rows.slice(1);
 
       const idIndex     = headers.indexOf("id");
       const nameIndex   = headers.indexOf("name");
-      const joinIndex   = headers.indexOf("join");
-      const expireIndex = headers.indexOf("expire");
+      const joinIndex   = headers.indexOf("join_date");
+      const expireIndex = headers.indexOf("expire_date");
 
-      const member = data.find(r => r[idIndex] === memberId);
+      const member = data.find(row => {
+        const sheetId = row[idIndex].toString().padStart(3, "0");
+        return sheetId === memberId;
+      });
 
       if (!member) {
         document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
@@ -144,11 +163,10 @@ if (!memberId) {
       joinEl.innerText   = "สมัคร: " + member[joinIndex];
       expireEl.innerText = "หมดอายุ: " + member[expireIndex];
 
-      // เช็คสถานะหมดอายุ
       const today = new Date();
-      const expireDate = new Date(member[expireIndex]);
+      const expireDate = parseDateSafe(member[expireIndex]);
 
-      if (!isNaN(expireDate) && expireDate >= today) {
+      if (expireDate && expireDate >= today) {
         status.innerText = "ACTIVE";
         status.className = "status active show";
       } else {
@@ -156,7 +174,6 @@ if (!memberId) {
         status.className = "status expired show";
       }
 
-      // animation
       document.getElementById("loading").style.opacity = 0;
 
       setTimeout(() => {
