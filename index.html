@@ -4,6 +4,24 @@
   <meta charset="UTF-8">
   <title>Member Card</title>
   <style>
+.fade {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.4s ease;
+}
+
+.fade.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#loading {
+  text-align: center;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+</style>
+
     body {
       margin: 0;
       padding: 20px;
@@ -34,11 +52,12 @@
 </head>
 <body>
 
-  <div class="card">
+  <div id="loading">กำลังโหลดข้อมูล...</div>
+<div class="card">
     <img src="card.png">
-    <div class="field name" id="name"></div>
-<div class="field join" id="join"></div>
-<div class="field expire" id="expire"></div>
+    <div id="name" class="field name fade"></div>
+<div id="join" class="field join fade"></div>
+<div id="expire" class="field expire fade"></div>
   </div>
 
 </body>
@@ -72,8 +91,11 @@ const expireIndex = headers.findIndex(h => h.toLowerCase().includes("expire"));
 
         document.getElementById("name").innerText = member[nameIndex];
         document.getElementById("join").innerText = "สมัคร: " + member[joinIndex];
-        document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];
-      });
+        document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];document.getElementById("loading").style.display = "none";
+
+document.querySelectorAll(".fade").forEach(el => {
+  setTimeout(() => el.classList.add("show"), 50);
+});
   }
 </script>
 
