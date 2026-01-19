@@ -3,25 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Member Card</title>
+
   <style>
-.fade {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: all 0.4s ease;
-}
-
-.fade.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-#loading {
-  text-align: center;
-  opacity: 0.7;
-  margin-bottom: 10px;
-}
-</style>
-
     body {
       margin: 0;
       padding: 20px;
@@ -30,73 +13,99 @@
       background: #f5f5f5;
       font-family: sans-serif;
     }
+
     .card {
       position: relative;
       width: 300px;
     }
+
     .card img {
       width: 100%;
       display: block;
     }
+
     .field {
       position: absolute;
-      left: 20px;
       color: #222;
       font-size: 16px;
       font-weight: bold;
+      left: 120px;
     }
-    .name { top: 58px; left: 120px; }
-    .join { top: 88px; left: 120px; }
-    .expire { top: 120px; left: 120px; }
+
+    .name { top: 58px; }
+    .join { top: 88px; }
+    .expire { top: 120px; }
+
+    #loading {
+      text-align: center;
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+
+    /* animation */
+    .fade {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: all 0.4s ease;
+    }
+
+    .fade.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
+
 <body>
 
   <div id="loading">กำลังโหลดข้อมูล...</div>
-<div class="card">
+
+  <div class="card">
     <img src="card.png">
     <div id="name" class="field name fade"></div>
-<div id="join" class="field join fade"></div>
-<div id="expire" class="field expire fade"></div>
+    <div id="join" class="field join fade"></div>
+    <div id="expire" class="field expire fade"></div>
   </div>
 
+  <script>
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+
+    const params = new URLSearchParams(window.location.search);
+    const memberId = params.get("id");
+
+    if (!memberId) {
+      document.body.innerHTML = "<h2>ไม่พบรหัสสมาชิก</h2>";
+    } else {
+      fetch(csvUrl)
+        .then(res => res.text())
+        .then(text => {
+          const rows = text.trim().split("\n").map(r => r.split(","));
+          const headers = rows[0];
+          const data = rows.slice(1);
+
+          const idIndex = headers.findIndex(h => h.toLowerCase().includes("id"));
+          const nameIndex = headers.findIndex(h => h.toLowerCase().includes("name"));
+          const joinIndex = headers.findIndex(h => h.toLowerCase().includes("join"));
+          const expireIndex = headers.findIndex(h => h.toLowerCase().includes("expire"));
+
+          const member = data.find(r => r[idIndex] === memberId);
+
+          if (!member) {
+            document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
+            return;
+          }
+
+          document.getElementById("name").innerText = member[nameIndex];
+          document.getElementById("join").innerText = "สมัคร: " + member[joinIndex];
+          document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];
+
+          document.getElementById("loading").style.display = "none";
+          document.querySelectorAll(".fade").forEach(el => {
+            setTimeout(() => el.classList.add("show"), 50);
+          });
+        });
+    }
+  </script>
+
 </body>
-<script>
-  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
-
-  const params = new URLSearchParams(window.location.search);
-  const memberId = params.get("id");
-
-  if (!memberId) {
-    document.body.innerHTML = "<h2>ไม่พบรหัสสมาชิก</h2>";
-  } else {
-    fetch(csvUrl)
-      .then(res => res.text())
-      .then(text => {
-        const rows = text.trim().split("\n").map(r => r.split(","));
-        const headers = rows[0];
-        const data = rows.slice(1);
-
-        const idIndex = headers.findIndex(h => h.toLowerCase().includes("id"));
-const nameIndex = headers.findIndex(h => h.toLowerCase().includes("name"));
-const joinIndex = headers.findIndex(h => h.toLowerCase().includes("join"));
-const expireIndex = headers.findIndex(h => h.toLowerCase().includes("expire"));
-
-        const member = data.find(r => r[idIndex] === memberId);
-
-        if (!member) {
-          document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
-          return;
-        }
-
-        document.getElementById("name").innerText = member[nameIndex];
-        document.getElementById("join").innerText = "สมัคร: " + member[joinIndex];
-        document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];document.getElementById("loading").style.display = "none";
-
-document.querySelectorAll(".fade").forEach(el => {
-  setTimeout(() => el.classList.add("show"), 50);
-});
-  }
-</script>
-
 </html>
