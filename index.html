@@ -63,8 +63,9 @@
     transform: translateY(0);
   }
 
-  .name { top: 73.5px; }
-  .join { top: 108px; }
+  /* ปรับตำแหน่งตรงนี้เท่านั้น */
+  .name   { top: 73.5px; }
+  .join   { top: 108px; }
   .expire { top: 145px; }
 
   .status {
@@ -80,9 +81,9 @@
     transition: opacity .4s ease;
   }
 
-  .status.active { background: #22c55e; }
+  .status.active  { background: #22c55e; }
   .status.expired { background: #ef4444; }
-  .status.show { opacity: 1; }
+  .status.show    { opacity: 1; }
 </style>
 </head>
 
@@ -111,35 +112,43 @@ if (!memberId) {
   fetch(csvUrl)
     .then(r => r.text())
     .then(text => {
-      const rows = text.trim().split("\n").map(r => r.split(","));
-      const headers = rows[0].map(h => h.toLowerCase());
+
+      // ✅ แก้ CSV \r และช่องว่างทุกช่อง
+      const rows = text
+        .trim()
+        .split("\n")
+        .map(r => r.split(",").map(c => c.trim()));
+
+      const headers = rows[0].map(h => h.toLowerCase().trim());
       const data = rows.slice(1);
 
-      const idIndex = headers.indexOf("id");
-      const nameIndex = headers.indexOf("name");
-      const joinIndex = headers.indexOf("join");
+      const idIndex     = headers.indexOf("id");
+      const nameIndex   = headers.indexOf("name");
+      const joinIndex   = headers.indexOf("join");
       const expireIndex = headers.indexOf("expire");
 
       const member = data.find(r => r[idIndex] === memberId);
+
       if (!member) {
         document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
         return;
       }
 
-      const nameEl = document.getElementById("name");
-      const joinEl = document.getElementById("join");
+      const nameEl   = document.getElementById("name");
+      const joinEl   = document.getElementById("join");
       const expireEl = document.getElementById("expire");
-      const card = document.getElementById("card");
-      const status = document.getElementById("status");
+      const card     = document.getElementById("card");
+      const status   = document.getElementById("status");
 
-      nameEl.innerText = member[nameIndex];
-      joinEl.innerText = "สมัคร: " + member[joinIndex];
+      nameEl.innerText   = member[nameIndex];
+      joinEl.innerText   = "สมัคร: " + member[joinIndex];
       expireEl.innerText = "หมดอายุ: " + member[expireIndex];
 
+      // เช็คสถานะหมดอายุ
       const today = new Date();
       const expireDate = new Date(member[expireIndex]);
 
-      if (expireDate >= today) {
+      if (!isNaN(expireDate) && expireDate >= today) {
         status.innerText = "ACTIVE";
         status.className = "status active show";
       } else {
@@ -147,11 +156,13 @@ if (!memberId) {
         status.className = "status expired show";
       }
 
+      // animation
       document.getElementById("loading").style.opacity = 0;
 
       setTimeout(() => {
         card.classList.add("loaded");
-        document.querySelectorAll(".field").forEach(el => el.classList.add("show"));
+        document.querySelectorAll(".field")
+          .forEach(el => el.classList.add("show"));
       }, 300);
     });
 }
