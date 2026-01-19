@@ -5,6 +5,7 @@
   <title>Member Card</title>
 
   <style>
+    /* ===== Page ===== */
     body {
       margin: 0;
       padding: 16px;
@@ -20,8 +21,14 @@
     .card {
       position: relative;
       width: 100%;
-      max-width: 380px; /* ขนาดเหมาะกับมือถือ */
+      max-width: 380px;        /* พอดีจอมือถือ */
       transition: filter 0.4s ease;
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     /* blur ตอนโหลด */
@@ -29,31 +36,18 @@
       filter: blur(3px) brightness(0.9);
     }
 
-    .card img {
-      width: 100%;
-      display: block;
-    }
-
-    /* ===== Text fields ===== */
+    /* ===== Text (ล็อกตำแหน่ง) ===== */
     .field {
       position: absolute;
-      color: #222;
+      left: 120px;     /* 🔒 ปรับครั้งเดียวจากดีไซน์ */
+      font-size: 16px; /* 🔒 ไม่ responsive */
       font-weight: bold;
-      left: 40%;
-      font-size: 4vw; /* scale ตามจอ */
+      color: #222;
     }
 
-    .name   { top: 18%; }
-    .join   { top: 27%; }
-    .expire { top: 36%; }
-
-    /* ล็อกขนาดบนจอใหญ่ */
-    @media (min-width: 420px) {
-      .field {
-        font-size: 16px;
-        left: 120px;
-      }
-    }
+    .name   { top: 58px; }
+    .join   { top: 88px; }
+    .expire { top: 120px; }
 
     /* ===== Loading overlay ===== */
     .loading {
@@ -94,6 +88,7 @@
     <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
 
     <img src="card.png" alt="Member Card">
+
     <div id="name" class="field name fade"></div>
     <div id="join" class="field join fade"></div>
     <div id="expire" class="field expire fade"></div>
