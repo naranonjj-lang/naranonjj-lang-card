@@ -17,6 +17,12 @@
     .card {
       position: relative;
       width: 300px;
+      transition: filter 0.4s ease;
+    }
+
+    /* blur ตอนโหลด */
+    .card.loading-state img {
+      filter: blur(3px) brightness(0.9);
     }
 
     .card img {
@@ -36,13 +42,26 @@
     .join { top: 88px; }
     .expire { top: 120px; }
 
-    #loading {
-      text-align: center;
-      opacity: 0.7;
-      margin-bottom: 10px;
+    /* loading overlay */
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.85);
+      font-size: 14px;
+      z-index: 5;
+      opacity: 1;
+      transition: opacity 0.4s ease;
     }
 
-    /* animation */
+    .loading.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* text animation */
     .fade {
       opacity: 0;
       transform: translateY(6px);
@@ -58,9 +77,9 @@
 
 <body>
 
-  <div id="loading">กำลังโหลดข้อมูล...</div>
+  <div class="card loading-state">
+    <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
 
-  <div class="card">
     <img src="card.png">
     <div id="name" class="field name fade"></div>
     <div id="join" class="field join fade"></div>
@@ -99,9 +118,14 @@
           document.getElementById("join").innerText = "สมัคร: " + member[joinIndex];
           document.getElementById("expire").innerText = "หมดอายุ: " + member[expireIndex];
 
-          document.getElementById("loading").style.display = "none";
-          document.querySelectorAll(".fade").forEach(el => {
-            setTimeout(() => el.classList.add("show"), 50);
+          const loadingEl = document.getElementById("loading");
+          const cardEl = document.querySelector(".card");
+
+          loadingEl.classList.add("hide");
+          cardEl.classList.remove("loading-state");
+
+          document.querySelectorAll(".fade").forEach((el, i) => {
+            setTimeout(() => el.classList.add("show"), 100 + i * 120);
           });
         });
     }
