@@ -34,6 +34,7 @@ body {
   filter: blur(8px);
   opacity: .6;
   transition: all .5s ease;
+  font-size: clamp(14px, 2.5vw, 18px);
 }
 
 .card.loaded {
@@ -53,45 +54,60 @@ body {
   opacity: 0;
   transform: translateY(6px);
   transition: all .4s ease;
+  transform: translateY(6px);
+  transition: all .4s ease;
+  transform: translateY(-50%);
 }
+
 
 .field.show {
   opacity: 1;
+  opacity .4s ease,
+    transform .25s ease,
+    top .25s ease,
+    left .25s ease;
   transform: translateY(0);
 }
 
 /* ===== layout ===== */
 .name-kr {
-  top: 65px;
-  right: 130px;
-  font-size: 18px;
+  top: 29%;
+  left: 30%;
+  font-size: 1.2em;
   font-weight: bold;
+  max-width: 40%;
+  white-space: nowrap;
 }
 
 .name-en {
-  top: 69px;
-  right: -40px;
-  font-size: 18px;
+  top: 31%;
+  left: 50%;
+  font-size: 1.2em;
   font-weight: bold;
+  max-width: 40%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .birth {
-  top: 115px;
-  right: 30px;
-  font-size: 15px;
+  top: 51%;
+  left: 40%;
+  font-size: 0.9em;
 }
 
 .join {
-  top: 158px;
-  right: 130px;
-  font-size: 15px;
+  top: 70%;
+  left: 24.5%;
+  font-size: 0.9em;
 }
 
 .expire {
-  top: 158px;
-  right: -215px;
-  font-size: 15px;
+  top: 70%;
+  left: 72.5%;
+  font-size: 0.9em;
 }
+
 
 /* ===== status ===== */
 .status {
