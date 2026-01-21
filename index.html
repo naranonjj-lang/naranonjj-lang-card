@@ -5,85 +5,111 @@
 <title>Member Card</title>
 
 <style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f2f2f2;
-    font-family: sans-serif;
-  }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f2f2f2;
+  font-family: sans-serif;
+}
 
-  .card-wrap {
-    text-align: center;
-  }
+.card-wrap {
+  text-align: center;
+}
 
-  #loading {
-    margin-bottom: 12px;
-    opacity: 0.7;
-    transition: opacity .4s ease;
-  }
+#loading {
+  margin-bottom: 12px;
+  opacity: .7;
+}
 
-  .card {
-    position: relative;
-    width: 360px;
-    max-width: 90vw;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 14px 32px rgba(0,0,0,.15);
-    filter: blur(8px);
-    opacity: .6;
-    transition: all .5s ease;
-  }
+.card {
+  position: relative;
+  width: 360px;
+  max-width: 90vw;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 32px rgba(0,0,0,.15);
+  filter: blur(8px);
+  opacity: .6;
+  transition: all .5s ease;
+}
 
-  .card.loaded {
-    filter: blur(0);
-    opacity: 1;
-  }
+.card.loaded {
+  filter: blur(0);
+  opacity: 1;
+}
 
-  .card img {
-    width: 100%;
-    display: block;
-  }
+.card img {
+  width: 100%;
+  display: block;
+}
 
-  .field {
-    position: absolute;
-    left: 140px;
-    color: #222;
-    font-size: 16px;
-    font-weight: bold;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: all .4s ease;
-  }
+.field {
+  position: absolute;
+  left: 30px;
+  color: #222;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all .4s ease;
+}
 
-  .field.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.field.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-  /* 🔧 ปรับตำแหน่งข้อความตรงนี้ */
-  .name   { top: 73.5px; }
-  .join   { top: 108px; }
-  .expire { top: 145px; }
+/* ===== layout ===== */
+.name-kr {
+  top: 65px;
+  right: 130px;
+  font-size: 18px;
+  font-weight: bold;
+}
 
-  .status {
-    position: absolute;
-    top: 35px;
-    right: 20px;
-    padding: 4px 10px;
-    font-size: 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-weight: bold;
-    opacity: 0;
-    transition: opacity .4s ease;
-  }
+.name-en {
+  top: 69px;
+  right: -40px;
+  font-size: 18px;
+  font-weight: bold;
+}
 
-  .status.active  { background: #22c55e; }
-  .status.expired { background: #ef4444; }
-  .status.show    { opacity: 1; }
+.birth {
+  top: 115px;
+  right: 30px;
+  font-size: 15px;
+}
+
+.join {
+  top: 158px;
+  right: 130px;
+  font-size: 15px;
+}
+
+.expire {
+  top: 158px;
+  right: -215px;
+  font-size: 15px;
+}
+
+/* ===== status ===== */
+.status {
+  position: absolute;
+  top: 33px;
+  right: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.status.active  { background: #22c55e; }
+.status.expired { background: #ef4444; }
+.status.show    { opacity: 1; }
 </style>
 </head>
 
@@ -95,21 +121,21 @@
   <div class="card" id="card">
     <img src="card.png">
     <div id="status" class="status"></div>
-    <div id="name" class="field name"></div>
-    <div id="join" class="field join"></div>
+
+    <div id="nameKr" class="field name-kr"></div>
+    <div id="nameEn" class="field name-en"></div>
+    <div id="birth"  class="field birth"></div>
+    <div id="join"   class="field join"></div>
     <div id="expire" class="field expire"></div>
   </div>
 </div>
 
 <script>
-/* ===============================
-   CONFIG
-================================ */
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
+/* ===== CONFIG ===== */
+const csvUrl =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTH3k49gzRtNcKd8E32h5hz0rWkh3wKUkkPymfAh4NDtg0YZogVaCIV2YH8Ly68Gqhx7Fw6f4_UlGRj/pub?output=csv";
 
-/* ===============================
-   HELPERS
-================================ */
+/* ===== HELPERS ===== */
 function parseDateSafe(value) {
   if (!value) return null;
   const clean = value.replace(/"/g, "").trim();
@@ -117,71 +143,84 @@ function parseDateSafe(value) {
   return isNaN(d) ? null : d;
 }
 
-/* ===============================
-   MAIN
-================================ */
+function formatDateOnly(value) {
+  const d = parseDateSafe(value);
+  if (!d) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/* ===== MAIN ===== */
 const params = new URLSearchParams(window.location.search);
 const memberId = params.get("id");
 
 if (!memberId) {
   document.body.innerHTML = "<h2>ไม่พบรหัสสมาชิก</h2>";
 } else {
-  fetch(csvUrl)
-    .then(r => r.text())
-    .then(text => {
 
-      const rows = text
-        .trim()
-        .split("\n")
-        .map(r => r.split(",").map(c => c.trim()));
+fetch(csvUrl)
+  .then(r => {
+    if (!r.ok) throw new Error();
+    return r.text();
+  })
+  .then(text => {
 
-      const headers = rows[0].map(h => h.toLowerCase());
-      const data = rows.slice(1);
+    const rows = text.trim().split("\n").map(r =>
+      r.split(",").map(c => c.replace(/(^"|"$)/g,"").trim())
+    );
 
-      const idIndex     = headers.indexOf("id");
-      const nameIndex   = headers.indexOf("name");
-      const joinIndex   = headers.indexOf("join_date");
-      const expireIndex = headers.indexOf("expire_date");
+    const headers = rows[0].map(h => h.toLowerCase());
+    const data = rows.slice(1);
 
-      const member = data.find(row => {
-        const sheetId = row[idIndex].toString().padStart(3, "0");
-        return sheetId === memberId;
-      });
+    const idIndex     = headers.indexOf("id");
+    const krIndex     = headers.indexOf("name_kr");
+    const enIndex     = headers.indexOf("name_en");
+    const birthIndex  = headers.indexOf("birth_date");
+    const joinIndex   = headers.indexOf("join_date");
+    const expireIndex = headers.indexOf("expire_date");
 
-      if (!member) {
-        document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
-        return;
-      }
+    const member = data.find(row =>
+      row[idIndex].replace(/^0+/,"") === memberId.replace(/^0+/,"")
+    );
 
-      const nameEl   = document.getElementById("name");
-      const joinEl   = document.getElementById("join");
-      const expireEl = document.getElementById("expire");
-      const card     = document.getElementById("card");
-      const status   = document.getElementById("status");
+    if (!member) {
+      document.body.innerHTML = "<h2>ไม่พบข้อมูลสมาชิก</h2>";
+      return;
+    }
 
-      nameEl.innerText   = member[nameIndex];
-      joinEl.innerText   = "สมัคร: " + member[joinIndex];
-      expireEl.innerText = "หมดอายุ: " + member[expireIndex];
+    document.getElementById("nameKr").innerText = member[krIndex];
+    document.getElementById("nameEn").innerText = member[enIndex];
+    document.getElementById("birth").innerText  = formatDateOnly(member[birthIndex]);
+    document.getElementById("join").innerText   = formatDateOnly(member[joinIndex]);
+    document.getElementById("expire").innerText = formatDateOnly(member[expireIndex]);
 
-      const today = new Date();
-      const expireDate = parseDateSafe(member[expireIndex]);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const expireDate = parseDateSafe(member[expireIndex]);
 
-      if (expireDate && expireDate >= today) {
-        status.innerText = "ACTIVE";
-        status.className = "status active show";
-      } else {
-        status.innerText = "EXPIRED";
-        status.className = "status expired show";
-      }
+    const status = document.getElementById("status");
+    if (expireDate && expireDate >= today) {
+      status.innerText = "ACTIVE";
+      status.className = "status active show";
+    } else {
+      status.innerText = "EXPIRED";
+      status.className = "status expired show";
+    }
 
-      document.getElementById("loading").style.opacity = 0;
+    document.getElementById("loading").style.display = "none";
 
-      setTimeout(() => {
-        card.classList.add("loaded");
-        document.querySelectorAll(".field")
-          .forEach(el => el.classList.add("show"));
-      }, 300);
-    });
+    setTimeout(() => {
+      document.getElementById("card").classList.add("loaded");
+      document.querySelectorAll(".field")
+        .forEach(el => el.classList.add("show"));
+    }, 300);
+  })
+  .catch(() => {
+    document.body.innerHTML = "<h2>โหลดข้อมูลไม่สำเร็จ</h2>";
+  });
+
 }
 </script>
 
