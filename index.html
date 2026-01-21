@@ -2,6 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Member Card</title>
 
 <style>
@@ -24,17 +26,18 @@ body {
   opacity: .7;
 }
 
+/* ===== CARD ===== */
 .card {
   position: relative;
   width: 360px;
-  max-width: 90vw;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 14px 32px rgba(0,0,0,.15);
   filter: blur(8px);
   opacity: .6;
-  transition: all .5s ease;
-  font-size: clamp(14px, 2.5vw, 18px);
+  transition: filter .5s ease, opacity .5s ease, transform .3s ease;
+  transform-origin: center;
+  background: #fff;
 }
 
 .card.loaded {
@@ -47,25 +50,18 @@ body {
   display: block;
 }
 
+/* ===== TEXT FIELDS ===== */
 .field {
   position: absolute;
-  left: 30px;
   color: #222;
   opacity: 0;
   transform: translateY(6px);
-  transition: all .4s ease;
-  transform: translateY(6px);
-  transition: all .4s ease;
-  transform: translateY(-50%);
+  transition: opacity .4s ease, transform .4s ease;
+  white-space: nowrap;
 }
-
 
 .field.show {
   opacity: 1;
-  opacity .4s ease,
-    transform .25s ease,
-    top .25s ease,
-    left .25s ease;
   transform: translateY(0);
 }
 
@@ -73,19 +69,17 @@ body {
 .name-kr {
   top: 29%;
   left: 30%;
-  font-size: 1.2em;
+  font-size: 18px;
   font-weight: bold;
   max-width: 40%;
-  white-space: nowrap;
 }
 
 .name-en {
   top: 31%;
   left: 50%;
-  font-size: 1.2em;
+  font-size: 18px;
   font-weight: bold;
   max-width: 40%;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -93,27 +87,26 @@ body {
 .birth {
   top: 51%;
   left: 40%;
-  font-size: 0.9em;
+  font-size: 14px;
 }
 
 .join {
   top: 70%;
   left: 24.5%;
-  font-size: 0.9em;
+  font-size: 14px;
 }
 
 .expire {
   top: 70%;
   left: 72.5%;
-  font-size: 0.9em;
+  font-size: 14px;
 }
-
 
 /* ===== status ===== */
 .status {
   position: absolute;
-  top: 33px;
-  right: 20px;
+  top: 18px;
+  right: 16px;
   padding: 4px 12px;
   font-size: 12px;
   border-radius: 20px;
@@ -126,6 +119,19 @@ body {
 .status.active  { background: #22c55e; }
 .status.expired { background: #ef4444; }
 .status.show    { opacity: 1; }
+
+/* ===== MOBILE SCALE ===== */
+@media (max-width: 420px) {
+  .card {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    transform: scale(0.85);
+  }
+}
 </style>
 </head>
 
@@ -154,18 +160,14 @@ const csvUrl =
 /* ===== HELPERS ===== */
 function parseDateSafe(value) {
   if (!value) return null;
-  const clean = value.replace(/"/g, "").trim();
-  const d = new Date(clean + "T00:00:00");
+  const d = new Date(value + "T00:00:00");
   return isNaN(d) ? null : d;
 }
 
 function formatDateOnly(value) {
   const d = parseDateSafe(value);
   if (!d) return "";
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
 /* ===== MAIN ===== */
@@ -177,10 +179,7 @@ if (!memberId) {
 } else {
 
 fetch(csvUrl)
-  .then(r => {
-    if (!r.ok) throw new Error();
-    return r.text();
-  })
+  .then(r => r.text())
   .then(text => {
 
     const rows = text.trim().split("\n").map(r =>
@@ -190,15 +189,8 @@ fetch(csvUrl)
     const headers = rows[0].map(h => h.toLowerCase());
     const data = rows.slice(1);
 
-    const idIndex     = headers.indexOf("id");
-    const krIndex     = headers.indexOf("name_kr");
-    const enIndex     = headers.indexOf("name_en");
-    const birthIndex  = headers.indexOf("birth_date");
-    const joinIndex   = headers.indexOf("join_date");
-    const expireIndex = headers.indexOf("expire_date");
-
     const member = data.find(row =>
-      row[idIndex].replace(/^0+/,"") === memberId.replace(/^0+/,"")
+      row[headers.indexOf("id")].replace(/^0+/,"") === memberId.replace(/^0+/,"")
     );
 
     if (!member) {
@@ -206,17 +198,16 @@ fetch(csvUrl)
       return;
     }
 
-    document.getElementById("nameKr").innerText = member[krIndex];
-    document.getElementById("nameEn").innerText = member[enIndex];
-    document.getElementById("birth").innerText  = formatDateOnly(member[birthIndex]);
-    document.getElementById("join").innerText   = formatDateOnly(member[joinIndex]);
-    document.getElementById("expire").innerText = formatDateOnly(member[expireIndex]);
+    nameKr.innerText = member[headers.indexOf("name_kr")];
+    nameEn.innerText = member[headers.indexOf("name_en")];
+    birth.innerText  = formatDateOnly(member[headers.indexOf("birth_date")]);
+    join.innerText   = formatDateOnly(member[headers.indexOf("join_date")]);
+    expire.innerText = formatDateOnly(member[headers.indexOf("expire_date")]);
 
     const today = new Date();
     today.setHours(0,0,0,0);
-    const expireDate = parseDateSafe(member[expireIndex]);
+    const expireDate = parseDateSafe(member[headers.indexOf("expire_date")]);
 
-    const status = document.getElementById("status");
     if (expireDate && expireDate >= today) {
       status.innerText = "ACTIVE";
       status.className = "status active show";
@@ -225,18 +216,13 @@ fetch(csvUrl)
       status.className = "status expired show";
     }
 
-    document.getElementById("loading").style.display = "none";
+    loading.style.display = "none";
 
     setTimeout(() => {
-      document.getElementById("card").classList.add("loaded");
-      document.querySelectorAll(".field")
-        .forEach(el => el.classList.add("show"));
+      card.classList.add("loaded");
+      document.querySelectorAll(".field").forEach(el => el.classList.add("show"));
     }, 300);
-  })
-  .catch(() => {
-    document.body.innerHTML = "<h2>โหลดข้อมูลไม่สำเร็จ</h2>";
   });
-
 }
 </script>
 
